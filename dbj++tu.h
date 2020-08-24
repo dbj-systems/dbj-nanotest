@@ -201,5 +201,6 @@ namespace dbj::tu
 } // namespace dbj::tu
 
 #include "ostrstream_operators.h"
+#include "ostrmng.h"
 
 #endif // DBJ_TU_INCLUDED

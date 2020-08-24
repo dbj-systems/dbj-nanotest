@@ -1,4 +1,9 @@
 #pragma once
+/* (c) 2019,2020 by dbj.org   -- CC BY-SA 4.0 -- https://creativecommons.org/licenses/by-sa/4.0/ */
+
+#ifdef __clang__
+#pragma clang system_header
+#endif // __clang__
 
 #include <sstream>
 
