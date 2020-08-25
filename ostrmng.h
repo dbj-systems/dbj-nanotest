@@ -8,7 +8,7 @@
 #endif // __clang__
 
 #include "../dbj--nanolib/nonstd/nano_printf.h"
-#include "../dbj--nanolib/vt100win10.h"
+#include "vt100win10.h"
 
 #undef DBJ_LOG_MAX_LINE_LEN
 #define DBJ_LOG_MAX_LINE_LEN 1024U
