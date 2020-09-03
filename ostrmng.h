@@ -1,14 +1,36 @@
 #pragma once
-#ifndef DBJ_FORMAT_INC_
-#define DBJ_FORMAT_INC_
-/* (c) 2019,2020 by dbj.org   -- CC BY-SA 4.0 -- https://creativecommons.org/licenses/by-sa/4.0/ */
+#ifndef DBJ_OSTRMNG_INC_
+#define DBJ_OSTRMNG_INC_
+/* (c) 2019-2020 by dbj.org   -- LICENSE DBJ -- https://dbj.org/license_dbj/ */
+
+#ifdef __STDC_ALLOC_LIB__
+#define __STDC_WANT_LIB_EXT2__ 1
+#else
+#define _POSIX_C_SOURCE 200809L
+#endif
 
 #ifdef __clang__
 #pragma clang system_header
 #endif // __clang__
 
-#include "../dbj--nanolib/nonstd/nano_printf.h"
+// #include "../dbj--nanolib/nonstd/nano_printf.h"
 #include "vt100win10.h"
+
+//
+#define _CRT_SECURE_NO_WARNINGS 1
+
+//
+#define __STDC_LIB_EXT1__ 1
+#ifndef __STDC_LIB_EXT1__
+#error __STDC_LIB_EXT1__ needs to be defined (as 1) before using gmtime_s
+#endif
+
+#include <ctime>
+
+#include <array>
+#include <string_view>
+#include <sstream>
+#include <tuple>
 
 #undef DBJ_LOG_MAX_LINE_LEN
 #define DBJ_LOG_MAX_LINE_LEN 1024U
@@ -33,24 +55,7 @@
 #define DBJ_ERR_PROMPT(MSG_) DBJ_FILE_LINE_TSTAMP MSG_
 ///------------------------------------------------------------------
 #define DBJ_NANO_LOG_FAIL_POLICY(...) perror(DBJ_ERR_PROMPT( # __VA_ARGS__ ) ); exit(1);
-//
-#define _CRT_SECURE_NO_WARNINGS 1
 
-//
-#include <array>
-#include <string_view>
-//
-// here is a lot of virtual tables
-// not fast
-// TODO: change to std::format usage when time comes
-#include <sstream>
-#include <tuple>
-//
-#define __STDC_LIB_EXT1__ 1
-#ifndef __STDC_LIB_EXT1__
-#error __STDC_LIB_EXT1__ needs to be defined (as 1) before using gmtime_s
-#endif
-#include <ctime>
 
 namespace dbj::nanolib::ostrmng
 {
@@ -58,6 +63,7 @@ namespace dbj::nanolib::ostrmng
 		{ 
 			return fprintf(DBJ_DEFAULT_LOG_STD_TARGET, "\n%s", log_line_.data()); 
 		}
+
 #pragma region tuple prinf
 	// for ADL to work (https://en.cppreference.com/w/cpp/language/adl)
 	// this operator has to be in the same namespace as prinf() and logf()
@@ -98,6 +104,9 @@ namespace dbj::nanolib::ostrmng
 	{
 		using namespace std;
 
+		dbj::lock_unlock autolock_;
+
+		// this is bad
 		char buff_[DBJ_LOG_MAX_LINE_LEN]{/*zero it the buff_*/ };
 		ostringstream os_(buff_);
 
@@ -109,6 +118,8 @@ namespace dbj::nanolib::ostrmng
 		(..., (out(params))); // the rest
 
 		os_.flush();
+
+		// what with this? --> os_.bad();
 
 		default_sink_function(os_.str());
 	}
@@ -187,4 +198,4 @@ DBJ_RESET, " -- Type: ", typeid(x).name()); \
 
 	} // namespace dbj::nanolib::ostrmng
 
-#endif // !DBJ_FORMAT_INC_
+#endif // !DBJ_OSTRMNG_INC_

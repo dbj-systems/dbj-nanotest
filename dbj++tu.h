@@ -81,7 +81,7 @@ namespace dbj::tu
 
 	inline void line() noexcept
 	{
-		DBJ_PRINT("----------------------------------------------------------------------");
+		DBJ_PRINT("\n----------------------------------------------------------------------\n");
 	}
 	/// ---------------------------------------------------------------
 	inline units_sequence_type& units()
@@ -131,7 +131,7 @@ namespace dbj::tu
 		static void start(int = 0, char** = nullptr) noexcept
 		{
 			DBJ_PRINT(DBJ_FG_CYAN);
-			DBJ_PRINT("DBJ++TESTING ---------------------------------------");
+			DBJ_PRINT("\nDBJ++TESTING ---------------------------------------");
 			line();
 #ifdef __clang__
 			//__clang__             // set to 1 if compiler is clang
@@ -139,23 +139,23 @@ namespace dbj::tu
 			//	__clang_minor__       // integer: minor marketing version number of clang
 			//	__clang_patchlevel__  // integer: marketing patch level of clang
 			//	__clang_version__     // string: full version number
-			DBJ_PRINT(DBJ_FG_CYAN "CLANG: %s" DBJ_RESET, __clang_version__);
+			DBJ_PRINT(DBJ_FG_CYAN "\nCLANG: %s" DBJ_RESET, __clang_version__);
 #else
-			DBJ_PRINT("_MSVC_LANG: %lu", _MSVC_LANG);
+			DBJ_PRINT("\n_MSVC_LANG: %lu", _MSVC_LANG);
 #endif
 #if DBJ_TERMINATE_ON_BAD_ALLOC
-			DBJ_PRINT(DBJ_FG_RED_BOLD "Program is configured to terminate on heap memory exhaustion" DBJ_RESET);
+			DBJ_PRINT(DBJ_FG_RED_BOLD "\nProgram is configured to terminate on heap memory exhaustion" DBJ_RESET);
 #else
 			DBJ_PRINT(DBJ_FG_RED_BOLD "\nProgram is configured to throw std::bad_alloc on heap memory exhaustion" DBJ_RESET);
 #endif
-			DBJ_PRINT("Catalogue has %zd test units", units().size());
+			DBJ_PRINT("\nCatalogue has %zd test units", units().size());
 			line();
 			DBJ_PRINT(DBJ_RESET);
 		}
 
 		static void end() noexcept
 		{
-			DBJ_PRINT(DBJ_FG_CYAN "%s" DBJ_RESET, "All tests done." );
+			DBJ_PRINT(DBJ_FG_CYAN "\n%s" DBJ_RESET, "All tests done.\n" );
 		}
 
 		// do not warn about address %4X formating char
@@ -171,7 +171,7 @@ namespace dbj::tu
 			{
 				DBJ_ASSERT(tu_);
 
-				DBJ_PRINT(DBJ_FG_CYAN "Test Unit:  " DBJ_FG_RED_BOLD "%d [%4X]" DBJ_RESET,
+				DBJ_PRINT(DBJ_FG_CYAN "\nTest Unit:  " DBJ_FG_RED_BOLD "%d [%4X]" DBJ_RESET,
 					counter_++, &(tu_) );
 				line();
 
@@ -184,7 +184,7 @@ namespace dbj::tu
 					(tu_)();
 
 				DBJ_PRINT(DBJ_FG_CYAN);
-				DBJ_PRINT("Done in: %s", as_buffer(timer_).data());
+				DBJ_PRINT("\nDone in: %s", as_buffer(timer_).data());
 				line();
 				DBJ_PRINT(DBJ_RESET);
 			}
