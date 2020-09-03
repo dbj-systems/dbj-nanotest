@@ -7,6 +7,8 @@
 #pragma clang system_header
 #endif // __clang__
 
+#include "vt100win10.h"
+
 #include <functional>
 
 #ifndef DBJ_NANOLIB_INCLUDED
