@@ -76,7 +76,7 @@ namespace dbj::tu
 	constexpr size_t fp_storage_size{ 0xFFF };
 
 	using units_sequence_type
-		= DBJ_ARRAY_STORAGE
+		= DBJ_ARRAY_WITH_PUSH
 		<  tu_fun_obj, fp_storage_size>;
 
 	inline void line() noexcept

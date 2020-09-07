@@ -13,7 +13,7 @@
 #pragma clang system_header
 #endif // __clang__
 
-// #include "../dbj--nanolib/nonstd/nano_printf.h"
+#include "../dbj--nanolib/dbj_nano_synchro.h"
 #include "vt100win10.h"
 
 //
@@ -104,7 +104,7 @@ namespace dbj::nanolib::ostrmng
 	{
 		using namespace std;
 
-		dbj::lock_unlock autolock_;
+		DBJ_LOCAL_LOCK;
 
 		// this is bad
 		char buff_[DBJ_LOG_MAX_LINE_LEN]{/*zero it the buff_*/ };
@@ -129,7 +129,7 @@ namespace dbj::nanolib::ostrmng
 	template <typename... Args>
 	inline void prinfmt(const char* format_, Args... args) noexcept
 	{
-		DBJ_NANO_LIB_SYNC_ENTER;
+		DBJ_LOCAL_LOCK;
 
 #ifdef DBJ_NANO_LOG_NO_ESCAPE_CODES_FATAL
 		if (
@@ -162,7 +162,6 @@ namespace dbj::nanolib::ostrmng
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif // __clang__
-		DBJ_NANO_LIB_SYNC_LEAVE;
 		}
 
 
