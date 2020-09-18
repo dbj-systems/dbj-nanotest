@@ -45,54 +45,67 @@ void main() {
 }
 
 */
-#define TU_REGISTER inline auto \
+
+/*
+now notice this static in here
+without it global ad-hoc lambda instances compiled are not guaranteed to be unique
+on the level of the app!
+*/
+#define TU_REGISTER static auto \
 _DBJ_CONCATENATE(dbj_unused_tu_function_pointer_, __LINE__) \
-= ::dbj::tu::testing_system::append_test_function
+= ::dbj::tu::tu_catalog().append_test_function
+
+// inline testing_system& tu_catalog()
+
 
 // requires function pointer
 // they are in there but
 // for some reason clang loses lambdas somewhere
-#define TUF_REG( FP_ ) inline auto \
+#define TUF_REG( FP_ ) static auto \
 _DBJ_CONCATENATE(dbj_unused_tu_function_pointer_, __LINE__) \
-= ::dbj::tu::testing_system::append_test_function( FP_ )
+= ::dbj::tu::tu_catalog().append_test_function( FP_ )
 
 #define TU_REGISTER_NOT inline auto \
 _DBJ_CONCATENATE(dbj_unused_tu_function_pointer_, __LINE__) = 
 
+#ifdef _DEBUG
+#define DBJ_CHECKING_IS_TU_FP_UNIQUE 1
+#else
 #define DBJ_CHECKING_IS_TU_FP_UNIQUE 0
+#endif
 
 namespace dbj::tu
 {
 	using namespace std;
-
-	using tu_function = void (*)();
-	using tu_fun_obj  = function< void() > ;
-
-	/*
-	4095 test units is a lot of test units for any kind of project
-	more than 4095 test units means something is wrong with
-	a project logic
-	*/
-	constexpr size_t fp_storage_size{ 0xFFF };
-
-	using units_sequence_type
-		= DBJ_ARRAY_WITH_PUSH
-		<  tu_fun_obj, fp_storage_size>;
 
 	inline void line() noexcept
 	{
 		DBJ_PRINT("\n----------------------------------------------------------------------\n");
 	}
 	/// ---------------------------------------------------------------
-	inline units_sequence_type& units()
-	{
-		static units_sequence_type units_single_instance_{};
-		return units_single_instance_;
-	};
+	//inline units_sequence_type& units_()
+	//{
+	//	static units_sequence_type units_single_instance_{};
+	//	return units_single_instance_;
+	//};
 	/// ---------------------------------------------------------------
 	struct testing_system final
 	{
+		using tu_function = void (*)();
+		using tu_fun_obj = function< void() >;
 
+		/*
+		4095 test units_ is a lot of test units_ for any kind of project
+		more than 4095 test units_ means something is wrong with
+		a project (laugh)
+		*/
+		constexpr static inline size_t fp_storage_size{ 0xFFF };
+
+		using units_sequence_type
+			= DBJ_ARRAY_WITH_PUSH
+			<  tu_function, fp_storage_size>;
+
+		units_sequence_type units_{};
 		// method for adding test functions
 		// NOTE: __clang__ and __GNUC__  are following the standard
 		// so passing lambda/fp by value does the "degrade"
@@ -100,13 +113,14 @@ namespace dbj::tu
 		// side effect of that is same adresses for different lambdas
 		// meaning: loosing them
 		// so be sure to pass lambda/fp by const ref
-		static volatile auto append_test_function
+		volatile auto append_test_function
 		(tu_function const & fun_) noexcept
 		{
 #if DBJ_CHECKING_IS_TU_FP_UNIQUE
 			{
 				bool test_found_before_registration{ false };
-				for (auto& elem : units)
+
+				for (tu_function elem : units_)
 				{
 					if (elem == fun_)
 					{
@@ -114,6 +128,7 @@ namespace dbj::tu
 						break;
 					}
 				}
+
 				if (test_found_before_registration)
 				{
 					using dbj::nanolib::v_buffer;
@@ -123,12 +138,12 @@ namespace dbj::tu
 				}
 			}
 #endif
-			auto rezult = units().push_back(fun_);
+			auto rezult = units_.push_back(fun_);
 			DBJ_ASSERT(rezult != nullptr);
 			return fun_;
 		}
 
-		static void start(int = 0, char** = nullptr) noexcept
+		void start(int = 0, char** = nullptr) noexcept
 		{
 			DBJ_PRINT(DBJ_FG_CYAN);
 			DBJ_PRINT("\nDBJ++TESTING ---------------------------------------");
@@ -148,12 +163,12 @@ namespace dbj::tu
 #else
 			DBJ_PRINT(DBJ_FG_RED_BOLD "\nProgram is configured to throw std::bad_alloc on heap memory exhaustion" DBJ_RESET);
 #endif
-			DBJ_PRINT("\nCatalogue has %zd test units", units().size());
+			DBJ_PRINT("\nCatalogue has %zd test units_", units_.size());
 			line();
 			DBJ_PRINT(DBJ_RESET);
 		}
 
-		static void end() noexcept
+		void end() noexcept
 		{
 			DBJ_PRINT(DBJ_FG_CYAN "\n%s" DBJ_RESET, "All tests done.\n" );
 		}
@@ -162,12 +177,12 @@ namespace dbj::tu
 #pragma warning( push )
 #pragma warning( disable : 4477 4313 )
 
-		static int execute(bool listing_ = false) noexcept
+		int execute(bool listing_ = false) noexcept
 		{
 			unsigned counter_{};
 			start();
 
-			for (const auto & tu_ : units())
+			for (tu_function tu_ : units_ )
 			{
 				DBJ_ASSERT(tu_);
 
@@ -196,9 +211,11 @@ namespace dbj::tu
 	}; // testing system
 #pragma warning( pop )
 
-	/// constexpr /*inline*/ testing_system catalog;
-
-
+	inline testing_system & tu_catalog()
+	{
+		static testing_system instance_{};
+		return instance_;
+	}
 
 } // namespace dbj::tu
 
