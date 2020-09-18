@@ -9,7 +9,7 @@
 
 #include "vt100win10.h"
 
-#include <functional>
+// #include <functional>
 
 #ifndef DBJ_NANOLIB_INCLUDED
 #include "../dbj--nanolib/dbj++nanolib.h"
@@ -55,9 +55,6 @@ on the level of the app!
 _DBJ_CONCATENATE(dbj_unused_tu_function_pointer_, __LINE__) \
 = ::dbj::tu::tu_catalog().append_test_function
 
-// inline testing_system& tu_catalog()
-
-
 // requires function pointer
 // they are in there but
 // for some reason clang loses lambdas somewhere
@@ -76,9 +73,9 @@ _DBJ_CONCATENATE(dbj_unused_tu_function_pointer_, __LINE__) =
 
 namespace dbj::tu
 {
-	using namespace std;
+	// using namespace std;
 
-	inline void line() noexcept
+	inline void line_of_hyphens() noexcept
 	{
 		DBJ_PRINT("\n----------------------------------------------------------------------\n");
 	}
@@ -92,7 +89,6 @@ namespace dbj::tu
 	struct testing_system final
 	{
 		using tu_function = void (*)();
-		using tu_fun_obj = function< void() >;
 
 		/*
 		4095 test units_ is a lot of test units_ for any kind of project
@@ -131,10 +127,9 @@ namespace dbj::tu
 
 				if (test_found_before_registration)
 				{
-					using dbj::nanolib::v_buffer;
-					v_buffer::buffer_type report = v_buffer::format("Test Unit %s [%p], found before registration", typeid(fun_).name(), fun_);
-					wstring final(report.begin(), report.end());
-					_ASSERT_EXPR(false == test_found_before_registration, final.data());
+					_CrtDbgReportW(_CRT_ERROR, 
+						_CRT_WIDE(__FILE__), __LINE__, NULL, L"Test Unit [%p], found already registered.",  fun_
+					);
 				}
 			}
 #endif
@@ -147,7 +142,7 @@ namespace dbj::tu
 		{
 			DBJ_PRINT(DBJ_FG_CYAN);
 			DBJ_PRINT("\nDBJ++TESTING ---------------------------------------");
-			line();
+			line_of_hyphens();
 #ifdef __clang__
 			//__clang__             // set to 1 if compiler is clang
 			//	__clang_major__       // integer: major marketing version number of clang
@@ -164,11 +159,11 @@ namespace dbj::tu
 			DBJ_PRINT(DBJ_FG_RED_BOLD "\nProgram is configured to throw std::bad_alloc on heap memory exhaustion" DBJ_RESET);
 #endif
 			DBJ_PRINT("\nCatalogue has %zd test units_", units_.size());
-			line();
+			line_of_hyphens();
 			DBJ_PRINT(DBJ_RESET);
 		}
 
-		void end() noexcept
+		void after_loop() noexcept
 		{
 			DBJ_PRINT(DBJ_FG_CYAN "\n%s" DBJ_RESET, "All tests done.\n" );
 		}
@@ -182,13 +177,16 @@ namespace dbj::tu
 			unsigned counter_{};
 			start();
 
-			for (tu_function tu_ : units_ )
+			for (volatile tu_function tu_ : units_ )
 			{
-				DBJ_ASSERT(tu_);
+				if (tu_ == nullptr) {
+					_CrtDbgReportW(_CRT_WARN, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%s", L"This should not happen?");
+					break;
+				}
 
 				DBJ_PRINT(DBJ_FG_CYAN "\nTest Unit:  " DBJ_FG_RED_BOLD "%d [%4X]" DBJ_RESET,
-					counter_++, &(tu_) );
-				line();
+					counter_++, tu_ );
+				line_of_hyphens();
 
 				if (listing_)
 					continue;
@@ -200,11 +198,11 @@ namespace dbj::tu
 
 				DBJ_PRINT(DBJ_FG_CYAN);
 				DBJ_PRINT("\nDone in: %s", as_buffer(timer_).data());
-				line();
+				line_of_hyphens();
 				DBJ_PRINT(DBJ_RESET);
 			}
 			if (!listing_)
-				end();
+				after_loop();
 
 			return EXIT_SUCCESS;
 		}
