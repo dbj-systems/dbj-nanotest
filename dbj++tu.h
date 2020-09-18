@@ -9,16 +9,12 @@
 
 #include "vt100win10.h"
 
-// #include <functional>
-
-#ifndef DBJ_NANOLIB_INCLUDED
+// always MT
+#undef  DBJ_NANO_LIB_MT
+#define DBJ_NANO_LIB_MT
 #include "../dbj--nanolib/dbj++nanolib.h"
-#endif
-
-#ifndef DBJ_ARRAY_INCLUDED_
+#include "../dbj--nanolib/dbj_nano_synchro.h"
 #include "../dbj--nanolib/nonstd/dbj++array.h"
-#endif
-
 #include "../dbj--nanolib/nonstd/dbj_timer.h"
 
 // please see this if wondering why do we use array not vector
@@ -75,10 +71,7 @@ namespace dbj::tu
 {
 	// using namespace std;
 
-	inline void line_of_hyphens() noexcept
-	{
-		DBJ_PRINT("\n----------------------------------------------------------------------\n");
-	}
+
 	/// ---------------------------------------------------------------
 	//inline units_sequence_type& units_()
 	//{
@@ -88,6 +81,7 @@ namespace dbj::tu
 	/// ---------------------------------------------------------------
 	struct testing_system final
 	{
+	private:
 		using tu_function = void (*)();
 
 		/*
@@ -102,6 +96,7 @@ namespace dbj::tu
 			<  tu_function, fp_storage_size>;
 
 		units_sequence_type units_{};
+	public:
 		// method for adding test functions
 		// NOTE: __clang__ and __GNUC__  are following the standard
 		// so passing lambda/fp by value does the "degrade"
@@ -112,6 +107,8 @@ namespace dbj::tu
 		volatile auto append_test_function
 		(tu_function const & fun_) noexcept
 		{
+			DBJ_LOCAL_LOCK;
+
 #if DBJ_CHECKING_IS_TU_FP_UNIQUE
 			{
 				bool test_found_before_registration{ false };
@@ -137,6 +134,51 @@ namespace dbj::tu
 			DBJ_ASSERT(rezult != nullptr);
 			return fun_;
 		}
+
+		// do not warn about address %4X formating char
+#pragma warning( push )
+#pragma warning( disable : 4477 4313 )
+
+		int execute(bool listing_ = false) noexcept
+		{
+			DBJ_LOCAL_LOCK;
+
+			unsigned counter_{};
+			start();
+
+			for (volatile tu_function tu_ : units_)
+			{
+				if (tu_ == nullptr) {
+					_CrtDbgReportW(_CRT_WARN, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%s", L"This should not happen?");
+					break;
+				}
+
+				DBJ_PRINT(DBJ_FG_CYAN "\nTest Unit:  " DBJ_FG_RED_BOLD "%d [%4X]" DBJ_RESET,
+					counter_++, tu_);
+				line_of_hyphens();
+
+				if (listing_)
+					continue;
+
+				dbj::nanolib::timer timer_{};
+
+				if (tu_)
+					(tu_)();
+
+				DBJ_PRINT(DBJ_FG_CYAN);
+				DBJ_PRINT("\nDone in: %s", as_buffer(timer_).data());
+				line_of_hyphens();
+				DBJ_PRINT(DBJ_RESET);
+			}
+			if (!listing_)
+				after_loop();
+
+			return EXIT_SUCCESS;
+		}
+
+#pragma warning( pop )
+
+	private:
 
 		void start(int = 0, char** = nullptr) noexcept
 		{
@@ -168,46 +210,12 @@ namespace dbj::tu
 			DBJ_PRINT(DBJ_FG_CYAN "\n%s" DBJ_RESET, "All tests done.\n" );
 		}
 
-		// do not warn about address %4X formating char
-#pragma warning( push )
-#pragma warning( disable : 4477 4313 )
-
-		int execute(bool listing_ = false) noexcept
+		void line_of_hyphens() noexcept
 		{
-			unsigned counter_{};
-			start();
-
-			for (volatile tu_function tu_ : units_ )
-			{
-				if (tu_ == nullptr) {
-					_CrtDbgReportW(_CRT_WARN, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%s", L"This should not happen?");
-					break;
-				}
-
-				DBJ_PRINT(DBJ_FG_CYAN "\nTest Unit:  " DBJ_FG_RED_BOLD "%d [%4X]" DBJ_RESET,
-					counter_++, tu_ );
-				line_of_hyphens();
-
-				if (listing_)
-					continue;
-
-				dbj::nanolib::timer timer_{};
-
-				if (tu_)
-					(tu_)();
-
-				DBJ_PRINT(DBJ_FG_CYAN);
-				DBJ_PRINT("\nDone in: %s", as_buffer(timer_).data());
-				line_of_hyphens();
-				DBJ_PRINT(DBJ_RESET);
-			}
-			if (!listing_)
-				after_loop();
-
-			return EXIT_SUCCESS;
+			DBJ_PRINT("\n----------------------------------------------------------------------\n");
 		}
+
 	}; // testing system
-#pragma warning( pop )
 
 	inline testing_system & tu_catalog()
 	{
