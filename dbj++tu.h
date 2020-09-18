@@ -124,6 +124,7 @@ namespace dbj::tu
 
 				if (test_found_before_registration)
 				{
+					// NOTE: this will not link in release builds
 					_CrtDbgReportW(_CRT_ERROR, 
 						_CRT_WIDE(__FILE__), __LINE__, NULL, L"Test Unit [%p], found already registered.",  fun_
 					);
@@ -149,7 +150,10 @@ namespace dbj::tu
 			for (volatile tu_function tu_ : units_)
 			{
 				if (tu_ == nullptr) {
-					_CrtDbgReportW(_CRT_WARN, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%s", L"This should not happen?");
+					// this is serious and I should work on this not to happen
+					// try signaling even in release build
+					// stderr should be redirected to a file
+					fprintf( stderr, "\nERROR : %s(%d) : %s" ,__FILE__, __LINE__, "This should not happen?");
 					break;
 				}
 
